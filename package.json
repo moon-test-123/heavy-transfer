@@ -2,9 +2,9 @@
   "name": "heavy-transfer",
   "version": "1.0.0",
   "description": "Large file upload & download demo (local folder)",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
