@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Heavy Upload / Download Demo</title>
+<style>
+  body            { font-family: system-ui, sans-serif; margin: 2rem; }
+  #dropzone       { border: 2px dashed #777; padding: 3rem; text-align: center; border-radius: 8px; color:#555; }
+  #dropzone.hover { border-color: #1e88e5; background: #e3f2fd; }
+  progress        { width: 100%; margin-top: 1rem; height: 18px; }
+  ul              { margin-top: 2rem; }
+</style>
+</head>
+<body>
+
+<h1>Large File Upload &amp; Download</h1>
+
+<div id="dropzone">Drag &amp; drop a file here<br>or<br><input type="file" id="fileInput"></div>
+<progress id="progress" value="0" max="100" hidden></progress>
+
+<ul id="files"></ul>
+
+<script>
+const dropzone   = document.getElementById('dropzone');
+const fileInput  = document.getElementById('fileInput');
+const progressEl = document.getElementById('progress');
+const listEl     = document.getElementById('files');
+
+dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add('hover'); };
+dropzone.ondragleave = () => dropzone.classList.remove('hover');
+dropzone.ondrop = e => {
+  e.preventDefault();
+  dropzone.classList.remove('hover');
+  if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+};
+
+fileInput.onchange = () => {
+  if (fileInput.files.length) uploadFile(fileInput.files[0]);
+};
+
+function uploadFile(file) {
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', '/upload');
+  const formData = new FormData();
+  formData.append('file', file);
+
+  // progress
+  xhr.upload.onprogress = evt => {
+    if (evt.lengthComputable) {
+      progressEl.hidden = false;
+      progressEl.value  = (evt.loaded / evt.total) * 100;
+    }
+  };
+
+  // success
+  xhr.onload = () => {
+    progressEl.hidden = true;
+    if (xhr.status === 200) {
+      const { filename, originalName } = JSON.parse(xhr.response);
+      const li = document.createElement('li');
+      li.innerHTML = `
+        ✅ ${originalName} — <a href="/download/${filename}">download</a>
+      `;
+      listEl.prepend(li);
+    } else {
+      alert('Upload failed: ' + xhr.statusText);
+    }
+  };
+
+  xhr.onerror = () => alert('Upload error');
+  xhr.send(formData);
+}
+</script>
+</body>
+</html>
